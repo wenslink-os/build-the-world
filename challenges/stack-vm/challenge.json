@@ -1,0 +1,41 @@
+{
+  "id": "stack-vm",
+  "title": "Build a stack machine",
+  "category": "Foundations",
+  "description": "Evaluate a compact bytecode program.",
+  "api": "execute(program)",
+  "spec": "PUSH n appends a value. ADD and MUL pop two values and push the result. DUP copies the top. Missing operands and unknown instructions throw.",
+  "hints": [
+    "An array is a stack.",
+    "Check operand count before popping."
+  ],
+  "exports": [
+    "execute"
+  ],
+  "cases": [
+    {
+      "name": "push",
+      "body": "equal(execute([['PUSH',3]]),[3]);"
+    },
+    {
+      "name": "add",
+      "body": "equal(execute([['PUSH',3],['PUSH',4],['ADD']]),[7]);"
+    },
+    {
+      "name": "multiply",
+      "body": "equal(execute([['PUSH',3],['DUP'],['MUL']]),[9]);"
+    },
+    {
+      "name": "underflow",
+      "body": "throws(()=>execute([['ADD']]));"
+    },
+    {
+      "name": "empty duplicate",
+      "body": "throws(()=>execute([['DUP']]));"
+    }
+  ],
+  "scenario": "Stack underflow",
+  "prerequisites": [
+    "cpu"
+  ]
+}

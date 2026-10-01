@@ -1,0 +1,41 @@
+{
+  "id": "git",
+  "title": "Build a snapshot store",
+  "category": "Systems",
+  "description": "Store immutable content-addressed snapshots.",
+  "api": "createStore(hash)",
+  "spec": "createStore receives a deterministic hash function. commit accepts string-valued file maps, sorts filenames and hashes JSON entry pairs. checkout returns a fresh file map or throws. This teaches snapshots, not Git compatibility.",
+  "hints": [
+    "Serialize sorted entries before hashing.",
+    "Store serialized data instead of caller-owned objects."
+  ],
+  "exports": [
+    "createStore"
+  ],
+  "cases": [
+    {
+      "name": "round trip",
+      "body": "const s=createStore(x=>x);const id=s.commit({a:'hello'});equal(s.checkout(id),{a:'hello'});"
+    },
+    {
+      "name": "canonical order",
+      "body": "const s=createStore(x=>x);equal(s.commit({a:'1',b:'2'}),s.commit({b:'2',a:'1'}));"
+    },
+    {
+      "name": "immutable snapshot",
+      "body": "const s=createStore(x=>x),f={a:'one'},id=s.commit(f);f.a='two';equal(s.checkout(id).a,'one');"
+    },
+    {
+      "name": "checkout isolation",
+      "body": "const s=createStore(x=>x),id=s.commit({a:'one'});s.checkout(id).a='two';equal(s.checkout(id).a,'one');"
+    },
+    {
+      "name": "missing object",
+      "body": "throws(()=>createStore(x=>x).checkout('missing'));"
+    }
+  ],
+  "scenario": "Mutation after commit",
+  "prerequisites": [
+    "compiler"
+  ]
+}

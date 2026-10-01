@@ -1,0 +1,45 @@
+{
+  "id": "compiler",
+  "title": "Build an expression compiler",
+  "category": "Foundations",
+  "description": "Compile integer addition into stack bytecode.",
+  "api": "compile(source)",
+  "spec": "Grammar: unsigned decimal integer followed by zero or more + integer terms, with optional whitespace. Emit PUSH instructions and left-associative ADD. Reject all other syntax.",
+  "hints": [
+    "Validate the complete input before emitting code.",
+    "Split terms only after syntax validation."
+  ],
+  "exports": [
+    "compile"
+  ],
+  "cases": [
+    {
+      "name": "integer",
+      "body": "equal(compile('42'),[['PUSH',42]]);"
+    },
+    {
+      "name": "addition",
+      "body": "equal(compile('2 + 3'),[['PUSH',2],['PUSH',3],['ADD']]);"
+    },
+    {
+      "name": "chain",
+      "body": "equal(compile('1+2+3').length,5);"
+    },
+    {
+      "name": "reject missing operand",
+      "body": "throws(()=>compile('1+'));"
+    },
+    {
+      "name": "reject names",
+      "body": "throws(()=>compile('abc'));"
+    },
+    {
+      "name": "reject empty",
+      "body": "throws(()=>compile(''));"
+    }
+  ],
+  "scenario": "Malformed source input",
+  "prerequisites": [
+    "stack-vm"
+  ]
+}

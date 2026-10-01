@@ -1,0 +1,1 @@
+export function createKV(now){const m=new Map();return {set(k,v,ttl=null){if(ttl!==null&&ttl<0)throw Error();m.set(k,{v,e:ttl===null?null:now()+ttl});},get(k){const x=m.get(k);if(!x)return null;return x.e&&now()>x.e?null:x.v;},delete(k){return m.delete(k);}};}

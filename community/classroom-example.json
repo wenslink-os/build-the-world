@@ -1,0 +1,42 @@
+{
+  "course": "Computing from small parts",
+  "type": "manual offline syllabus",
+  "weeks": [
+    {
+      "week": 1,
+      "labs": [
+        "cpu",
+        "stack-vm"
+      ]
+    },
+    {
+      "week": 2,
+      "labs": [
+        "compiler",
+        "git"
+      ]
+    },
+    {
+      "week": 3,
+      "labs": [
+        "redis",
+        "search"
+      ]
+    },
+    {
+      "week": 4,
+      "labs": [
+        "http",
+        "dns"
+      ]
+    },
+    {
+      "week": 5,
+      "labs": [
+        "neural-network",
+        "agent"
+      ]
+    }
+  ],
+  "assessment": "Review the learner code and exported test results. Local results are self-reported."
+}

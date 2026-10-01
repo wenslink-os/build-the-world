@@ -1,0 +1,468 @@
+[
+  {
+    "id": "cpu",
+    "title": "Build a tiny CPU",
+    "category": "Foundations",
+    "description": "Execute an 8-bit accumulator instruction set.",
+    "api": "run(program)",
+    "spec": "Accumulator starts at zero. LOAD, ADD and SUB wrap modulo 256. OUT appends a number. HALT stops. Unknown instructions throw.",
+    "hints": [
+      "Use one accumulator and one output array.",
+      "Mask arithmetic results with 255."
+    ],
+    "exports": [
+      "run"
+    ],
+    "cases": [
+      {
+        "name": "load and output",
+        "body": "equal(run([['LOAD',42],['OUT']]),[42]);"
+      },
+      {
+        "name": "arithmetic",
+        "body": "equal(run([['LOAD',10],['ADD',5],['SUB',3],['OUT']]),[12]);"
+      },
+      {
+        "name": "halt",
+        "body": "equal(run([['HALT'],['LOAD',9],['OUT']]),[]);"
+      },
+      {
+        "name": "wraparound",
+        "body": "equal(run([['LOAD',255],['ADD',2],['OUT']]),[1]);"
+      },
+      {
+        "name": "underflow",
+        "body": "equal(run([['SUB',1],['OUT']]),[255]);"
+      }
+    ],
+    "starter": "export function run(...args) {\n  throw new Error(\"Implement run\");\n}",
+    "broken": "export function run(p){let a=0,o=[];for(const [op,v] of p){if(op==='LOAD')a=v; if(op==='ADD')a+=v;if(op==='SUB')a-=v;if(op==='OUT')o.push(a);if(op==='HALT')break;}return o;}",
+    "scenario": "Arithmetic overflow",
+    "prerequisites": []
+  },
+  {
+    "id": "stack-vm",
+    "title": "Build a stack machine",
+    "category": "Foundations",
+    "description": "Evaluate a compact bytecode program.",
+    "api": "execute(program)",
+    "spec": "PUSH n appends a value. ADD and MUL pop two values and push the result. DUP copies the top. Missing operands and unknown instructions throw.",
+    "hints": [
+      "An array is a stack.",
+      "Check operand count before popping."
+    ],
+    "exports": [
+      "execute"
+    ],
+    "cases": [
+      {
+        "name": "push",
+        "body": "equal(execute([['PUSH',3]]),[3]);"
+      },
+      {
+        "name": "add",
+        "body": "equal(execute([['PUSH',3],['PUSH',4],['ADD']]),[7]);"
+      },
+      {
+        "name": "multiply",
+        "body": "equal(execute([['PUSH',3],['DUP'],['MUL']]),[9]);"
+      },
+      {
+        "name": "underflow",
+        "body": "throws(()=>execute([['ADD']]));"
+      },
+      {
+        "name": "empty duplicate",
+        "body": "throws(()=>execute([['DUP']]));"
+      }
+    ],
+    "starter": "export function execute(...args) {\n  throw new Error(\"Implement execute\");\n}",
+    "broken": "export function execute(p){const s=[];for(const [op,n] of p){if(op==='PUSH')s.push(n);else if(op==='DUP')s.push(s.at(-1));else {let b=s.pop(),a=s.pop();s.push(op==='ADD'?a+b:a*b);}}return s;}",
+    "scenario": "Stack underflow",
+    "prerequisites": [
+      "cpu"
+    ]
+  },
+  {
+    "id": "compiler",
+    "title": "Build an expression compiler",
+    "category": "Foundations",
+    "description": "Compile integer addition into stack bytecode.",
+    "api": "compile(source)",
+    "spec": "Grammar: unsigned decimal integer followed by zero or more + integer terms, with optional whitespace. Emit PUSH instructions and left-associative ADD. Reject all other syntax.",
+    "hints": [
+      "Validate the complete input before emitting code.",
+      "Split terms only after syntax validation."
+    ],
+    "exports": [
+      "compile"
+    ],
+    "cases": [
+      {
+        "name": "integer",
+        "body": "equal(compile('42'),[['PUSH',42]]);"
+      },
+      {
+        "name": "addition",
+        "body": "equal(compile('2 + 3'),[['PUSH',2],['PUSH',3],['ADD']]);"
+      },
+      {
+        "name": "chain",
+        "body": "equal(compile('1+2+3').length,5);"
+      },
+      {
+        "name": "reject missing operand",
+        "body": "throws(()=>compile('1+'));"
+      },
+      {
+        "name": "reject names",
+        "body": "throws(()=>compile('abc'));"
+      },
+      {
+        "name": "reject empty",
+        "body": "throws(()=>compile(''));"
+      }
+    ],
+    "starter": "export function compile(...args) {\n  throw new Error(\"Implement compile\");\n}",
+    "broken": "export function compile(s){const ns=s.split('+').map(Number),c=[['PUSH',ns[0]]];for(const n of ns.slice(1))c.push(['PUSH',n],['ADD']);return c;}",
+    "scenario": "Malformed source input",
+    "prerequisites": [
+      "stack-vm"
+    ]
+  },
+  {
+    "id": "git",
+    "title": "Build a snapshot store",
+    "category": "Systems",
+    "description": "Store immutable content-addressed snapshots.",
+    "api": "createStore(hash)",
+    "spec": "createStore receives a deterministic hash function. commit accepts string-valued file maps, sorts filenames and hashes JSON entry pairs. checkout returns a fresh file map or throws. This teaches snapshots, not Git compatibility.",
+    "hints": [
+      "Serialize sorted entries before hashing.",
+      "Store serialized data instead of caller-owned objects."
+    ],
+    "exports": [
+      "createStore"
+    ],
+    "cases": [
+      {
+        "name": "round trip",
+        "body": "const s=createStore(x=>x);const id=s.commit({a:'hello'});equal(s.checkout(id),{a:'hello'});"
+      },
+      {
+        "name": "canonical order",
+        "body": "const s=createStore(x=>x);equal(s.commit({a:'1',b:'2'}),s.commit({b:'2',a:'1'}));"
+      },
+      {
+        "name": "immutable snapshot",
+        "body": "const s=createStore(x=>x),f={a:'one'},id=s.commit(f);f.a='two';equal(s.checkout(id).a,'one');"
+      },
+      {
+        "name": "checkout isolation",
+        "body": "const s=createStore(x=>x),id=s.commit({a:'one'});s.checkout(id).a='two';equal(s.checkout(id).a,'one');"
+      },
+      {
+        "name": "missing object",
+        "body": "throws(()=>createStore(x=>x).checkout('missing'));"
+      }
+    ],
+    "starter": "export function createStore(...args) {\n  throw new Error(\"Implement createStore\");\n}",
+    "broken": "export function createStore(hash){const m=new Map();return {commit(f){const id=hash(JSON.stringify(f));m.set(id,f);return id;},checkout(id){if(!m.has(id))throw Error();return m.get(id);}};}",
+    "scenario": "Mutation after commit",
+    "prerequisites": [
+      "compiler"
+    ]
+  },
+  {
+    "id": "redis",
+    "title": "Build an expiring key-value store",
+    "category": "Data",
+    "description": "Implement SET, GET and lazy expiration.",
+    "api": "createKV(now)",
+    "spec": "Inject now() in milliseconds. set(key,value,ttl=null) replaces a key; null TTL never expires. A key expires when now >= deadline. Missing or expired get returns null. Negative TTL throws. delete returns whether a key existed.",
+    "hints": [
+      "Store a deadline with each value.",
+      "Check >= at the expiration boundary, including zero TTL."
+    ],
+    "exports": [
+      "createKV"
+    ],
+    "cases": [
+      {
+        "name": "set/get",
+        "body": "const s=createKV(()=>0);s.set('x','a');equal(s.get('x'),'a');"
+      },
+      {
+        "name": "missing",
+        "body": "equal(createKV(()=>0).get('absent'),null);"
+      },
+      {
+        "name": "boundary expiration",
+        "body": "let t=0;const s=createKV(()=>t);s.set('x','a',10);t=10;equal(s.get('x'),null);"
+      },
+      {
+        "name": "before expiration",
+        "body": "let t=0;const s=createKV(()=>t);s.set('x','a',10);t=9;equal(s.get('x'),'a');"
+      },
+      {
+        "name": "zero ttl",
+        "body": "const s=createKV(()=>0);s.set('x','a',0);equal(s.get('x'),null);"
+      },
+      {
+        "name": "overwrite clears ttl",
+        "body": "let t=0;const s=createKV(()=>t);s.set('x','a',1);s.set('x','b');t=100;equal(s.get('x'),'b');"
+      },
+      {
+        "name": "negative ttl",
+        "body": "throws(()=>createKV(()=>0).set('x','a',-1));"
+      }
+    ],
+    "starter": "export function createKV(...args) {\n  throw new Error(\"Implement createKV\");\n}",
+    "broken": "export function createKV(now){const m=new Map();return {set(k,v,ttl=null){if(ttl!==null&&ttl<0)throw Error();m.set(k,{v,e:ttl===null?null:now()+ttl});},get(k){const x=m.get(k);if(!x)return null;return x.e&&now()>x.e?null:x.v;},delete(k){return m.delete(k);}};}",
+    "scenario": "Expiration boundary",
+    "prerequisites": [
+      "git"
+    ]
+  },
+  {
+    "id": "http",
+    "title": "Build an HTTP request parser",
+    "category": "Internet",
+    "description": "Parse a bounded HTTP/1.1 request head.",
+    "api": "parseRequest(raw)",
+    "spec": "Input ends its header section with CRLF CRLF. Return {method,path,headers}. Accept uppercase methods and HTTP/1.1 only. Lowercase header names; trim values. Reject duplicate headers, invalid lines and incomplete heads. Body decoding is outside this exercise.",
+    "hints": [
+      "Find the header terminator first.",
+      "Reject duplicate names after normalizing case."
+    ],
+    "exports": [
+      "parseRequest"
+    ],
+    "cases": [
+      {
+        "name": "request line",
+        "body": "equal(parseRequest('GET / HTTP/1.1\\r\\n\\r\\n').method,'GET');"
+      },
+      {
+        "name": "normalize headers",
+        "body": "equal(parseRequest('GET /x HTTP/1.1\\r\\nHost: example.test\\r\\n\\r\\n').headers.host,'example.test');"
+      },
+      {
+        "name": "incomplete",
+        "body": "throws(()=>parseRequest('GET / HTTP/1.1'));"
+      },
+      {
+        "name": "duplicate rejection",
+        "body": "throws(()=>parseRequest('GET / HTTP/1.1\\r\\nHost: a\\r\\nhost: b\\r\\n\\r\\n'));"
+      },
+      {
+        "name": "invalid line",
+        "body": "throws(()=>parseRequest('oops\\r\\n\\r\\n'));"
+      },
+      {
+        "name": "invalid header",
+        "body": "throws(()=>parseRequest('GET / HTTP/1.1\\r\\nbad\\r\\n\\r\\n'));"
+      }
+    ],
+    "starter": "export function parseRequest(...args) {\n  throw new Error(\"Implement parseRequest\");\n}",
+    "broken": "export function parseRequest(raw){const lines=raw.split('\\r\\n'),[method,path]=lines.shift().split(' '),headers={};for(const l of lines){let i=l.indexOf(':');if(i>0)headers[l.slice(0,i).toLowerCase()]=l.slice(i+1).trim();}return {method,path,headers};}",
+    "scenario": "Ambiguous duplicate headers",
+    "prerequisites": [
+      "stack-vm"
+    ]
+  },
+  {
+    "id": "dns",
+    "title": "Build a DNS cache",
+    "category": "Internet",
+    "description": "Cache names with deterministic TTLs.",
+    "api": "createDNS(now)",
+    "spec": "put(name,ip,ttl) stores an address until now()+ttl milliseconds. DNS names are case insensitive and may have one trailing dot. Expire at >= deadline. Missing names return null; negative TTL throws. No external network requests.",
+    "hints": [
+      "Normalize both write and lookup keys.",
+      "Inject a clock so expiration tests do not sleep."
+    ],
+    "exports": [
+      "createDNS"
+    ],
+    "cases": [
+      {
+        "name": "resolve",
+        "body": "const c=createDNS(()=>0);c.put('example.test','127.0.0.1',20);equal(c.resolve('example.test'),'127.0.0.1');"
+      },
+      {
+        "name": "case insensitive",
+        "body": "const c=createDNS(()=>0);c.put('EXAMPLE.TEST','x',20);equal(c.resolve('example.test'),'x');"
+      },
+      {
+        "name": "trailing dot",
+        "body": "const c=createDNS(()=>0);c.put('example.test.','x',20);equal(c.resolve('example.test'),'x');"
+      },
+      {
+        "name": "ttl boundary",
+        "body": "let t=0;const c=createDNS(()=>t);c.put('x','a',10);t=10;equal(c.resolve('x'),null);"
+      },
+      {
+        "name": "missing",
+        "body": "equal(createDNS(()=>0).resolve('x'),null);"
+      },
+      {
+        "name": "negative",
+        "body": "throws(()=>createDNS(()=>0).put('x','a',-1));"
+      }
+    ],
+    "starter": "export function createDNS(...args) {\n  throw new Error(\"Implement createDNS\");\n}",
+    "broken": "export function createDNS(now){const m=new Map();return {put(n,ip,ttl){if(ttl<0)throw Error();m.set(n,{ip,e:now()+ttl});},resolve(n){const x=m.get(n);return x&&now()<x.e?x.ip:null;}};}",
+    "scenario": "DNS name normalization",
+    "prerequisites": [
+      "http"
+    ]
+  },
+  {
+    "id": "search",
+    "title": "Build an inverted index",
+    "category": "Data",
+    "description": "Find documents containing every query term.",
+    "api": "createIndex(documents)",
+    "spec": "Tokenize using lowercase ASCII alphanumeric runs. Build word-to-document-id sets. search(query) returns sorted numeric ids matching every term. Empty queries return []. Repeated words must not duplicate results.",
+    "hints": [
+      "Map each word to a Set of document ids.",
+      "Intersect candidate sets for multiword queries."
+    ],
+    "exports": [
+      "createIndex"
+    ],
+    "cases": [
+      {
+        "name": "word lookup",
+        "body": "equal(createIndex(['red car','blue car']).search('red'),[0]);"
+      },
+      {
+        "name": "AND query",
+        "body": "equal(createIndex(['red car','red boat']).search('red car'),[0]);"
+      },
+      {
+        "name": "case and punctuation",
+        "body": "equal(createIndex(['Hello, WORLD!']).search('world'),[0]);"
+      },
+      {
+        "name": "no substring",
+        "body": "equal(createIndex(['cart']).search('car'),[]);"
+      },
+      {
+        "name": "empty query",
+        "body": "equal(createIndex(['a']).search(''),[]);"
+      },
+      {
+        "name": "deduplicate",
+        "body": "equal(createIndex(['a a a']).search('a'),[0]);"
+      }
+    ],
+    "starter": "export function createIndex(...args) {\n  throw new Error(\"Implement createIndex\");\n}",
+    "broken": "export function createIndex(ds){return {search(q){return ds.flatMap((d,i)=>d.toLowerCase().includes(q.toLowerCase())?[i]:[]);}};}",
+    "scenario": "Token boundary mismatch",
+    "prerequisites": [
+      "redis"
+    ]
+  },
+  {
+    "id": "neural-network",
+    "title": "Build a perceptron",
+    "category": "AI",
+    "description": "Implement prediction and one training update.",
+    "api": "predict(weights,bias,input), train(weights,bias,input,target,rate)",
+    "spec": "predict returns 1 if dot(weights,input)+bias >= 0, otherwise 0. Dimensions must match. train returns fresh {weights,bias} using rate*(target-prediction) and does not mutate weights. This is a perceptron exercise, not an LLM.",
+    "hints": [
+      "Compute a weighted sum plus bias.",
+      "Use the same prediction threshold when calculating error."
+    ],
+    "exports": [
+      "predict",
+      "train"
+    ],
+    "cases": [
+      {
+        "name": "positive",
+        "body": "equal(predict([1,1],-1,[1,1]),1);"
+      },
+      {
+        "name": "negative",
+        "body": "equal(predict([1,1],-1,[0,0]),0);"
+      },
+      {
+        "name": "zero threshold",
+        "body": "equal(predict([0],0,[1]),1);"
+      },
+      {
+        "name": "update",
+        "body": "equal(train([0],0,[1],0,0.5),{weights:[-0.5],bias:-0.5});"
+      },
+      {
+        "name": "no mutation",
+        "body": "const w=[0];train(w,0,[1],0,1);equal(w,[0]);"
+      },
+      {
+        "name": "dimensions",
+        "body": "throws(()=>predict([1],0,[1,2]));"
+      }
+    ],
+    "starter": "export function predict(...args) {\n  throw new Error(\"Implement predict\");\n}\nexport function train(...args) {\n  throw new Error(\"Implement train\");\n}",
+    "broken": "export function predict(w,b,x){if(w.length!==x.length)throw Error();return w.reduce((s,v,i)=>s+v*x[i],b)>0?1:0;}export function train(w,b,x,t,r){let e=t-predict(w,b,x);return {weights:w.map((v,i)=>v+r*e*x[i]),bias:b+r*e};}",
+    "scenario": "Threshold disagreement",
+    "prerequisites": [
+      "search"
+    ]
+  },
+  {
+    "id": "agent",
+    "title": "Build a bounded tool agent",
+    "category": "AI",
+    "description": "Run an allowlisted plan with a hard step budget.",
+    "api": "runAgent(plan,tools,budget)",
+    "spec": "runAgent takes a list of {tool,input}, an object of allowed tool functions, and a nonnegative integer budget. Reject over-budget plans before invoking tools. Invoke tools in order, awaiting each. Only own properties of the tool object are allowed. No LLM or network is involved.",
+    "hints": [
+      "Validate the plan length before execution.",
+      "Object.hasOwn prevents inherited property execution."
+    ],
+    "exports": [
+      "runAgent"
+    ],
+    "cases": [
+      {
+        "name": "tool execution",
+        "body": "equal(await runAgent([{tool:'double',input:3}],{double:x=>x*2},1),[6]);"
+      },
+      {
+        "name": "async tool",
+        "body": "equal(await runAgent([{tool:'echo',input:'ok'}],{echo:async x=>x},1),['ok']);"
+      },
+      {
+        "name": "budget",
+        "body": "await rejects(()=>runAgent([{tool:'x'}],{x:()=>1},0));"
+      },
+      {
+        "name": "unknown tool",
+        "body": "await rejects(()=>runAgent([{tool:'missing'}],{},1));"
+      },
+      {
+        "name": "inherited name",
+        "body": "await rejects(()=>runAgent([{tool:'toString'}],{},1));"
+      },
+      {
+        "name": "empty plan",
+        "body": "equal(await runAgent([],{},0),[]);"
+      },
+      {
+        "name": "invalid budget",
+        "body": "await rejects(()=>runAgent([],{},-1));"
+      }
+    ],
+    "starter": "export async function runAgent(...args) {\n  throw new Error(\"Implement runAgent\");\n}",
+    "broken": "export async function runAgent(plan,tools,budget){const r=[];for(const s of plan){if(typeof tools[s.tool]!=='function')throw Error();r.push(await tools[s.tool](s.input));}return r;}",
+    "scenario": "Step budget bypass",
+    "prerequisites": [
+      "neural-network",
+      "http"
+    ]
+  }
+]

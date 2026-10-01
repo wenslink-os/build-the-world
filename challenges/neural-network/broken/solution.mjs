@@ -1,0 +1,1 @@
+export function predict(w,b,x){if(w.length!==x.length)throw Error();return w.reduce((s,v,i)=>s+v*x[i],b)>0?1:0;}export function train(w,b,x,t,r){let e=t-predict(w,b,x);return {weights:w.map((v,i)=>v+r*e*x[i]),bias:b+r*e};}

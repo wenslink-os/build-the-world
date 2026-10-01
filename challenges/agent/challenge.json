@@ -1,0 +1,50 @@
+{
+  "id": "agent",
+  "title": "Build a bounded tool agent",
+  "category": "AI",
+  "description": "Run an allowlisted plan with a hard step budget.",
+  "api": "runAgent(plan,tools,budget)",
+  "spec": "runAgent takes a list of {tool,input}, an object of allowed tool functions, and a nonnegative integer budget. Reject over-budget plans before invoking tools. Invoke tools in order, awaiting each. Only own properties of the tool object are allowed. No LLM or network is involved.",
+  "hints": [
+    "Validate the plan length before execution.",
+    "Object.hasOwn prevents inherited property execution."
+  ],
+  "exports": [
+    "runAgent"
+  ],
+  "cases": [
+    {
+      "name": "tool execution",
+      "body": "equal(await runAgent([{tool:'double',input:3}],{double:x=>x*2},1),[6]);"
+    },
+    {
+      "name": "async tool",
+      "body": "equal(await runAgent([{tool:'echo',input:'ok'}],{echo:async x=>x},1),['ok']);"
+    },
+    {
+      "name": "budget",
+      "body": "await rejects(()=>runAgent([{tool:'x'}],{x:()=>1},0));"
+    },
+    {
+      "name": "unknown tool",
+      "body": "await rejects(()=>runAgent([{tool:'missing'}],{},1));"
+    },
+    {
+      "name": "inherited name",
+      "body": "await rejects(()=>runAgent([{tool:'toString'}],{},1));"
+    },
+    {
+      "name": "empty plan",
+      "body": "equal(await runAgent([],{},0),[]);"
+    },
+    {
+      "name": "invalid budget",
+      "body": "await rejects(()=>runAgent([],{},-1));"
+    }
+  ],
+  "scenario": "Step budget bypass",
+  "prerequisites": [
+    "neural-network",
+    "http"
+  ]
+}

@@ -1,0 +1,1 @@
+export function parseRequest(raw){const lines=raw.split('\r\n'),[method,path]=lines.shift().split(' '),headers={};for(const l of lines){let i=l.indexOf(':');if(i>0)headers[l.slice(0,i).toLowerCase()]=l.slice(i+1).trim();}return {method,path,headers};}

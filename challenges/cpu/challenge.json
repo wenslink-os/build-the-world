@@ -1,0 +1,39 @@
+{
+  "id": "cpu",
+  "title": "Build a tiny CPU",
+  "category": "Foundations",
+  "description": "Execute an 8-bit accumulator instruction set.",
+  "api": "run(program)",
+  "spec": "Accumulator starts at zero. LOAD, ADD and SUB wrap modulo 256. OUT appends a number. HALT stops. Unknown instructions throw.",
+  "hints": [
+    "Use one accumulator and one output array.",
+    "Mask arithmetic results with 255."
+  ],
+  "exports": [
+    "run"
+  ],
+  "cases": [
+    {
+      "name": "load and output",
+      "body": "equal(run([['LOAD',42],['OUT']]),[42]);"
+    },
+    {
+      "name": "arithmetic",
+      "body": "equal(run([['LOAD',10],['ADD',5],['SUB',3],['OUT']]),[12]);"
+    },
+    {
+      "name": "halt",
+      "body": "equal(run([['HALT'],['LOAD',9],['OUT']]),[]);"
+    },
+    {
+      "name": "wraparound",
+      "body": "equal(run([['LOAD',255],['ADD',2],['OUT']]),[1]);"
+    },
+    {
+      "name": "underflow",
+      "body": "equal(run([['SUB',1],['OUT']]),[255]);"
+    }
+  ],
+  "scenario": "Arithmetic overflow",
+  "prerequisites": []
+}

@@ -1,0 +1,20 @@
+{
+  "name": "build-the-world-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline engineering labs with build, break and repair loops",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "btw": "bin/btw.mjs"
+  },
+  "scripts": {
+    "start": "node bin/btw.mjs serve",
+    "test": "node --test tests/*.test.mjs",
+    "validate": "node bin/btw.mjs validate",
+    "verify": "node scripts/verify.mjs"
+  },
+  "license": "Apache-2.0"
+}

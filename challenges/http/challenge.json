@@ -1,0 +1,45 @@
+{
+  "id": "http",
+  "title": "Build an HTTP request parser",
+  "category": "Internet",
+  "description": "Parse a bounded HTTP/1.1 request head.",
+  "api": "parseRequest(raw)",
+  "spec": "Input ends its header section with CRLF CRLF. Return {method,path,headers}. Accept uppercase methods and HTTP/1.1 only. Lowercase header names; trim values. Reject duplicate headers, invalid lines and incomplete heads. Body decoding is outside this exercise.",
+  "hints": [
+    "Find the header terminator first.",
+    "Reject duplicate names after normalizing case."
+  ],
+  "exports": [
+    "parseRequest"
+  ],
+  "cases": [
+    {
+      "name": "request line",
+      "body": "equal(parseRequest('GET / HTTP/1.1\\r\\n\\r\\n').method,'GET');"
+    },
+    {
+      "name": "normalize headers",
+      "body": "equal(parseRequest('GET /x HTTP/1.1\\r\\nHost: example.test\\r\\n\\r\\n').headers.host,'example.test');"
+    },
+    {
+      "name": "incomplete",
+      "body": "throws(()=>parseRequest('GET / HTTP/1.1'));"
+    },
+    {
+      "name": "duplicate rejection",
+      "body": "throws(()=>parseRequest('GET / HTTP/1.1\\r\\nHost: a\\r\\nhost: b\\r\\n\\r\\n'));"
+    },
+    {
+      "name": "invalid line",
+      "body": "throws(()=>parseRequest('oops\\r\\n\\r\\n'));"
+    },
+    {
+      "name": "invalid header",
+      "body": "throws(()=>parseRequest('GET / HTTP/1.1\\r\\nbad\\r\\n\\r\\n'));"
+    }
+  ],
+  "scenario": "Ambiguous duplicate headers",
+  "prerequisites": [
+    "stack-vm"
+  ]
+}

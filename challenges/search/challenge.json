@@ -1,0 +1,45 @@
+{
+  "id": "search",
+  "title": "Build an inverted index",
+  "category": "Data",
+  "description": "Find documents containing every query term.",
+  "api": "createIndex(documents)",
+  "spec": "Tokenize using lowercase ASCII alphanumeric runs. Build word-to-document-id sets. search(query) returns sorted numeric ids matching every term. Empty queries return []. Repeated words must not duplicate results.",
+  "hints": [
+    "Map each word to a Set of document ids.",
+    "Intersect candidate sets for multiword queries."
+  ],
+  "exports": [
+    "createIndex"
+  ],
+  "cases": [
+    {
+      "name": "word lookup",
+      "body": "equal(createIndex(['red car','blue car']).search('red'),[0]);"
+    },
+    {
+      "name": "AND query",
+      "body": "equal(createIndex(['red car','red boat']).search('red car'),[0]);"
+    },
+    {
+      "name": "case and punctuation",
+      "body": "equal(createIndex(['Hello, WORLD!']).search('world'),[0]);"
+    },
+    {
+      "name": "no substring",
+      "body": "equal(createIndex(['cart']).search('car'),[]);"
+    },
+    {
+      "name": "empty query",
+      "body": "equal(createIndex(['a']).search(''),[]);"
+    },
+    {
+      "name": "deduplicate",
+      "body": "equal(createIndex(['a a a']).search('a'),[0]);"
+    }
+  ],
+  "scenario": "Token boundary mismatch",
+  "prerequisites": [
+    "redis"
+  ]
+}

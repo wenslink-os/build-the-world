@@ -1,0 +1,49 @@
+{
+  "id": "redis",
+  "title": "Build an expiring key-value store",
+  "category": "Data",
+  "description": "Implement SET, GET and lazy expiration.",
+  "api": "createKV(now)",
+  "spec": "Inject now() in milliseconds. set(key,value,ttl=null) replaces a key; null TTL never expires. A key expires when now >= deadline. Missing or expired get returns null. Negative TTL throws. delete returns whether a key existed.",
+  "hints": [
+    "Store a deadline with each value.",
+    "Check >= at the expiration boundary, including zero TTL."
+  ],
+  "exports": [
+    "createKV"
+  ],
+  "cases": [
+    {
+      "name": "set/get",
+      "body": "const s=createKV(()=>0);s.set('x','a');equal(s.get('x'),'a');"
+    },
+    {
+      "name": "missing",
+      "body": "equal(createKV(()=>0).get('absent'),null);"
+    },
+    {
+      "name": "boundary expiration",
+      "body": "let t=0;const s=createKV(()=>t);s.set('x','a',10);t=10;equal(s.get('x'),null);"
+    },
+    {
+      "name": "before expiration",
+      "body": "let t=0;const s=createKV(()=>t);s.set('x','a',10);t=9;equal(s.get('x'),'a');"
+    },
+    {
+      "name": "zero ttl",
+      "body": "const s=createKV(()=>0);s.set('x','a',0);equal(s.get('x'),null);"
+    },
+    {
+      "name": "overwrite clears ttl",
+      "body": "let t=0;const s=createKV(()=>t);s.set('x','a',1);s.set('x','b');t=100;equal(s.get('x'),'b');"
+    },
+    {
+      "name": "negative ttl",
+      "body": "throws(()=>createKV(()=>0).set('x','a',-1));"
+    }
+  ],
+  "scenario": "Expiration boundary",
+  "prerequisites": [
+    "git"
+  ]
+}

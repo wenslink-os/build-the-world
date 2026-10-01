@@ -1,0 +1,46 @@
+{
+  "id": "neural-network",
+  "title": "Build a perceptron",
+  "category": "AI",
+  "description": "Implement prediction and one training update.",
+  "api": "predict(weights,bias,input), train(weights,bias,input,target,rate)",
+  "spec": "predict returns 1 if dot(weights,input)+bias >= 0, otherwise 0. Dimensions must match. train returns fresh {weights,bias} using rate*(target-prediction) and does not mutate weights. This is a perceptron exercise, not an LLM.",
+  "hints": [
+    "Compute a weighted sum plus bias.",
+    "Use the same prediction threshold when calculating error."
+  ],
+  "exports": [
+    "predict",
+    "train"
+  ],
+  "cases": [
+    {
+      "name": "positive",
+      "body": "equal(predict([1,1],-1,[1,1]),1);"
+    },
+    {
+      "name": "negative",
+      "body": "equal(predict([1,1],-1,[0,0]),0);"
+    },
+    {
+      "name": "zero threshold",
+      "body": "equal(predict([0],0,[1]),1);"
+    },
+    {
+      "name": "update",
+      "body": "equal(train([0],0,[1],0,0.5),{weights:[-0.5],bias:-0.5});"
+    },
+    {
+      "name": "no mutation",
+      "body": "const w=[0];train(w,0,[1],0,1);equal(w,[0]);"
+    },
+    {
+      "name": "dimensions",
+      "body": "throws(()=>predict([1],0,[1,2]));"
+    }
+  ],
+  "scenario": "Threshold disagreement",
+  "prerequisites": [
+    "search"
+  ]
+}

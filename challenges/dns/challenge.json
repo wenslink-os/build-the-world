@@ -1,0 +1,45 @@
+{
+  "id": "dns",
+  "title": "Build a DNS cache",
+  "category": "Internet",
+  "description": "Cache names with deterministic TTLs.",
+  "api": "createDNS(now)",
+  "spec": "put(name,ip,ttl) stores an address until now()+ttl milliseconds. DNS names are case insensitive and may have one trailing dot. Expire at >= deadline. Missing names return null; negative TTL throws. No external network requests.",
+  "hints": [
+    "Normalize both write and lookup keys.",
+    "Inject a clock so expiration tests do not sleep."
+  ],
+  "exports": [
+    "createDNS"
+  ],
+  "cases": [
+    {
+      "name": "resolve",
+      "body": "const c=createDNS(()=>0);c.put('example.test','127.0.0.1',20);equal(c.resolve('example.test'),'127.0.0.1');"
+    },
+    {
+      "name": "case insensitive",
+      "body": "const c=createDNS(()=>0);c.put('EXAMPLE.TEST','x',20);equal(c.resolve('example.test'),'x');"
+    },
+    {
+      "name": "trailing dot",
+      "body": "const c=createDNS(()=>0);c.put('example.test.','x',20);equal(c.resolve('example.test'),'x');"
+    },
+    {
+      "name": "ttl boundary",
+      "body": "let t=0;const c=createDNS(()=>t);c.put('x','a',10);t=10;equal(c.resolve('x'),null);"
+    },
+    {
+      "name": "missing",
+      "body": "equal(createDNS(()=>0).resolve('x'),null);"
+    },
+    {
+      "name": "negative",
+      "body": "throws(()=>createDNS(()=>0).put('x','a',-1));"
+    }
+  ],
+  "scenario": "DNS name normalization",
+  "prerequisites": [
+    "http"
+  ]
+}
